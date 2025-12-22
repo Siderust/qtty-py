@@ -30,6 +30,30 @@ pub struct PyQuantity {
     inner: QttyQuantity,
 }
 
+impl PyQuantity {
+    /// Create a PyQuantity from a value and UnitId (for bridge usage).
+    pub fn from_quantity(value: f64, unit: UnitId) -> Self {
+        Self {
+            inner: QttyQuantity::new(value, unit),
+        }
+    }
+
+    /// Get the inner QttyQuantity (for bridge usage).
+    pub fn as_inner(&self) -> &QttyQuantity {
+        &self.inner
+    }
+
+    /// Get the numeric value (public API for bridge usage).
+    pub fn get_value(&self) -> f64 {
+        self.inner.value
+    }
+
+    /// Get the unit (public API for bridge usage).
+    pub fn get_unit(&self) -> UnitId {
+        self.inner.unit
+    }
+}
+
 #[pymethods]
 impl PyQuantity {
     /// Creates a new Quantity with the given value and unit.

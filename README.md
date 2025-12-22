@@ -83,6 +83,35 @@ assert pickle.loads(pickle.dumps(v)).symbol() == "m/s"
 - Expression parsing and numpy/pandas integrations are planned but not yet available.
 - The full unit catalog matches [`qtty-ffi`'s registry](https://github.com/Siderust/qtty/blob/main/qtty-ffi/units.csv).
 
+## Using qtty-py as a Bridge in Your Own Rust Project
+
+You can reuse qtty-py to export your own Rust structures with physical quantities to Python. See [BRIDGE_GUIDE.md](./BRIDGE_GUIDE.md) for a complete walkthrough.
+
+**Quick example:**
+
+```rust
+use pyo3::prelude::*;
+use qtty_py::bridge::ToQuantity;
+
+#[pyclass]
+pub struct Satellite {
+    distance: MyDistance,
+}
+
+impl ToQuantity for MyDistance {
+    fn value(&self) -> f64 { self.value }
+    fn unit(&self) -> qtty_ffi::UnitId { self.unit }
+}
+
+#[pymethods]
+impl Satellite {
+    #[getter]
+    fn distance(&self) -> qtty_py::PyQuantity {
+        self.distance.to_py_quantity()
+    }
+}
+```
+
 ## Development
 
 ### Prerequisites

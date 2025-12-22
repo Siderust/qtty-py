@@ -5,6 +5,7 @@
 
 use pyo3::prelude::*;
 
+pub mod bridge;
 mod derived;
 mod errors;
 mod quantity;
