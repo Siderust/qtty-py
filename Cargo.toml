@@ -12,9 +12,9 @@ name = "qtty"  # Python import name
 crate-type = ["cdylib"]
 
 [dependencies]
-qtty-ffi = { version = "0.2", path = "../qtty/qtty-ffi", features = ["python"] }
-pyo3 = { version = "0.22", features = ["extension-module"] }
+qtty-ffi = { version = "0.2.1", features = ["python"] }
+pyo3 = { version = "0.27.2", features = ["extension-module"] }
 
 [dev-dependencies]
-pyo3 = { version = "0.22", features = ["auto-initialize"] }
+pyo3 = { version = "0.27.2", features = ["auto-initialize"] }
 approx = "0.5"

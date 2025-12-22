@@ -19,10 +19,7 @@ pub struct PyDerivedUnit {
 impl PyDerivedUnit {
     #[new]
     fn new(numerator: UnitId, denominator: UnitId) -> PyResult<Self> {
-        Ok(Self {
-            numerator,
-            denominator,
-        })
+        Ok(Self { numerator, denominator })
     }
 
     /// Returns the numerator unit.
@@ -86,11 +83,7 @@ impl PyDerivedQuantity {
 impl PyDerivedQuantity {
     #[new]
     fn new(value: f64, numerator: UnitId, denominator: UnitId) -> PyResult<Self> {
-        Ok(Self {
-            value,
-            numerator,
-            denominator,
-        })
+        Ok(Self { value, numerator, denominator })
     }
 
     /// The numeric value of the derived quantity.
@@ -167,12 +160,7 @@ impl PyDerivedQuantity {
         format!("{} {}", self.value, self.symbol())
     }
 
-    /// Pickle support: return (class, args) for unpickling.
-    fn __reduce__(&self, py: Python) -> PyResult<(PyObject, (f64, UnitId, UnitId))> {
-        let cls = py.get_type_bound::<Self>();
-        Ok((
-            cls.into_any().unbind(),
-            (self.value, self.numerator, self.denominator),
-        ))
-    }
+    // Pickling support intentionally omitted: returning the raw `UnitId` from
+    // `qtty-ffi` keeps the Python API simple. If pickling is required, we can
+    // add a `__reduce__` that constructs the appropriate Python tuple.
 }

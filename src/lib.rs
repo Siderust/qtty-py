@@ -12,8 +12,6 @@ mod quantity;
 
 use derived::{PyDerivedQuantity, PyDerivedUnit};
 use quantity::PyQuantity;
-
-// Re-export UnitId from qtty-ffi (now has PyO3 support)
 pub use qtty_ffi::UnitId;
 
 /// qtty: Fast Physical Units for Python
@@ -32,7 +30,7 @@ fn _qtty(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyQuantity>()?;
     m.add_class::<PyDerivedUnit>()?;
     m.add_class::<PyDerivedQuantity>()?;
-    m.add_class::<UnitId>()?;  // Export the Rust enum directly!
+    m.add_class::<UnitId>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

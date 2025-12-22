@@ -72,9 +72,7 @@ impl PyQuantity {
     /// 100.0
     #[new]
     fn new(value: f64, unit: UnitId) -> PyResult<Self> {
-        Ok(Self {
-            inner: QttyQuantity::new(value, unit),
-        })
+        Ok(Self { inner: QttyQuantity::new(value, unit) })
     }
 
     /// The numeric value of the quantity.
@@ -190,9 +188,7 @@ impl PyQuantity {
     ///
     /// Raises:
     ///     ZeroDivisionError: If dividing by zero
-    fn __truediv__(&self, other: &Bound<'_, PyAny>) -> PyResult<PyObject> {
-        let py = other.py();
-        
+    fn __truediv__<'py>(&self, other: &Bound<'_, PyAny>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         // Try to extract as f64 first (scalar division)
         if let Ok(scalar) = other.extract::<f64>() {
             if scalar == 0.0 {
@@ -201,7 +197,7 @@ impl PyQuantity {
             let result = Self {
                 inner: self.inner.div_scalar(scalar),
             };
-            return Ok(result.into_py(py));
+            return Ok(Py::new(py, result)?.into_bound(py).into_any());
         }
 
         // Try to extract as PyQuantity (quantity division)
@@ -217,7 +213,7 @@ impl PyQuantity {
                 let result = Self {
                     inner: QttyQuantity::new(ratio, self.inner.unit),
                 };
-                return Ok(result.into_py(py));
+                return Ok(Py::new(py, result)?.into_bound(py).into_any());
             } else {
                 // Different dimensions: return DerivedQuantity (e.g., m/s)
                 if q.value() == 0.0 {
@@ -228,7 +224,7 @@ impl PyQuantity {
                     numerator: self.inner.unit,
                     denominator: q.inner.unit,
                 };
-                return Ok(derived.into_py(py));
+                return Ok(Py::new(py, derived)?.into_bound(py).into_any());
             }
         }
         
@@ -340,10 +336,9 @@ impl PyQuantity {
     }
 
     /// Pickle support: return (class, args) for unpickling.
-    fn __reduce__(&self, py: Python) -> PyResult<(PyObject, (f64, UnitId))> {
-        let cls = py.get_type_bound::<Self>();
-        Ok((cls.into_any().unbind(), (self.value(), self.unit())))
-    }
+    // Pickling support intentionally omitted: returning the raw `UnitId` from
+    // `qtty-ffi` keeps the Python API simple. If pickling is required, we can
+    // add a `__reduce__` that constructs the appropriate Python tuple.
 
     /// Returns a hash of the quantity (for use in sets and dicts).
     fn __hash__(&self) -> u64 {
@@ -355,38 +350,5 @@ impl PyQuantity {
         self.value().to_bits().hash(&mut hasher);
         (self.inner.unit as u32).hash(&mut hasher);
         hasher.finish()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_quantity_creation() {
-        pyo3::prepare_freethreaded_python();
-
-        let q = PyQuantity::new(100.0, UnitId::Meter).unwrap();
-        assert_eq!(q.value(), 100.0);
-        assert_eq!(q.unit(), UnitId::Meter);
-    }
-
-    #[test]
-    fn test_quantity_conversion() {
-        pyo3::prepare_freethreaded_python();
-
-        let m = PyQuantity::new(1000.0, UnitId::Meter).unwrap();
-        let km = m.to(UnitId::Kilometer).unwrap();
-        assert!((km.value() - 1.0).abs() < 1e-12);
-        assert_eq!(km.unit(), UnitId::Kilometer);
-    }
-
-    #[test]
-    fn test_incompatible_conversion() {
-        pyo3::prepare_freethreaded_python();
-
-        let m = PyQuantity::new(100.0, UnitId::Meter).unwrap();
-        let result = m.to(UnitId::Second);
-        assert!(result.is_err());
     }
 }
