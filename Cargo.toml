@@ -1,0 +1,20 @@
+[package]
+name = "qtty-py"
+version = "0.1.0"
+edition = "2021"
+description = "Python bindings for qtty physical quantities"
+license = "AGPL-3.0"
+repository = "https://github.com/Siderust/qtty"
+authors = ["VPRamon <vallespuigramon@gmail.com>"]
+
+[lib]
+name = "qtty"  # Python import name
+crate-type = ["cdylib"]
+
+[dependencies]
+qtty-ffi = { version = "0.2", path = "../qtty/qtty-ffi", features = ["python"] }
+pyo3 = { version = "0.22", features = ["extension-module"] }
+
+[dev-dependencies]
+pyo3 = { version = "0.22", features = ["auto-initialize"] }
+approx = "0.5"
