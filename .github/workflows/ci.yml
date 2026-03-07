@@ -33,7 +33,8 @@ jobs:
 
       - name: Build and install
         run: |
-          maturin develop
+          maturin build --out dist
+          pip install --no-index --find-links dist qtty
 
       - name: Run Python tests
         run: |
