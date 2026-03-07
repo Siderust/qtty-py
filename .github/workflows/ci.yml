@@ -30,12 +30,10 @@ jobs:
           pip install maturin pytest
 
       - name: Build and install
-        working-directory: qtty-py
         run: |
           maturin develop
 
       - name: Run Python tests
-        working-directory: qtty-py
         run: |
           pytest tests/ -v
 
@@ -53,7 +51,6 @@ jobs:
           override: true
 
       - name: Run Rust tests
-        working-directory: qtty-py
         run: cargo test
 
   lint:
@@ -71,11 +68,9 @@ jobs:
           components: rustfmt, clippy
 
       - name: Check formatting
-        working-directory: qtty-py
         run: cargo fmt -- --check
 
       - name: Run clippy
-        working-directory: qtty-py
         run: cargo clippy -- -D warnings
 
   build-wheels:
@@ -91,7 +86,6 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          working-directory: qtty-py
           command: build
           args: --release --out dist
 
@@ -99,4 +93,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
-          path: qtty-py/dist
+          path: dist
