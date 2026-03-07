@@ -5,7 +5,11 @@ This file demonstrates every dimension, the arithmetic-expression syntax,
 serde (JSON), derived quantities, pickle, comparisons, and error handling.
 """
 
-from qtty import Quantity, DerivedQuantity, DerivedUnit, Unit
+import json
+import math
+import pickle
+
+from qtty import DerivedQuantity, DerivedUnit, Quantity, Unit
 
 # ─── 1. Arithmetic-expression syntax ────────────────────────────────────────
 #
@@ -29,9 +33,9 @@ print(f"  Unit.Meter * 100.0         → {q3}")
 
 # Use it in expressions:
 distance = 100.0 * Unit.Meter
-time     = 9.58 * Unit.Second
+time = 9.58 * Unit.Second
 velocity = distance / time
-print(f"\n  Usain Bolt's 100 m dash:")
+print("\n  Usain Bolt's 100 m dash:")
 print(f"    distance = {distance}")
 print(f"    time     = {time}")
 print(f"    velocity = {velocity} ({velocity.symbol()})")
@@ -44,12 +48,12 @@ print()
 print("═══ 2. Length units ═══\n")
 
 print("  SI prefixes:")
-nm  = 1.0 * Unit.Nanometer
-um  = 1.0 * Unit.Micrometer
-mm  = 1.0 * Unit.Millimeter
-cm  = 1.0 * Unit.Centimeter
-m   = 1.0 * Unit.Meter
-km  = 1.0 * Unit.Kilometer
+nm = 1.0 * Unit.Nanometer
+um = 1.0 * Unit.Micrometer
+mm = 1.0 * Unit.Millimeter
+cm = 1.0 * Unit.Centimeter
+m = 1.0 * Unit.Meter
+km = 1.0 * Unit.Kilometer
 print(f"    1 nm  = {nm.to(Unit.Meter).value:.0e} m")
 print(f"    1 µm  = {um.to(Unit.Meter).value:.0e} m")
 print(f"    1 mm  = {mm.to(Unit.Meter).value} m")
@@ -71,9 +75,9 @@ nmi = 1.0 * Unit.NauticalMile
 print(f"    1 nmi  = {nmi.to(Unit.Meter).value} m")
 
 print("\n  Astronomical:")
-au  = 1.0 * Unit.AstronomicalUnit
-ly  = 1.0 * Unit.LightYear
-pc  = 1.0 * Unit.Parsec
+au = 1.0 * Unit.AstronomicalUnit
+ly = 1.0 * Unit.LightYear
+pc = 1.0 * Unit.Parsec
 kpc = 1.0 * Unit.Kiloparsec
 mpc = 1.0 * Unit.Megaparsec
 print(f"    1 AU        = {au.to(Unit.Meter).value:.4e} m")
@@ -84,8 +88,8 @@ print(f"    1 Mpc       = {mpc.to(Unit.Kiloparsec).value:.0f} kpc")
 
 print("\n  Solar/planetary:")
 r_earth = 1.0 * Unit.NominalEarthRadius
-r_sun   = 1.0 * Unit.NominalSolarRadius
-r_jup   = 1.0 * Unit.NominalJupiterRadius
+r_sun = 1.0 * Unit.NominalSolarRadius
+r_jup = 1.0 * Unit.NominalJupiterRadius
 print(f"    Earth radius   = {r_earth.to(Unit.Kilometer).value:.1f} km")
 print(f"    Jupiter radius = {r_jup.to(Unit.Kilometer).value:.1f} km")
 print(f"    Solar radius   = {r_sun.to(Unit.Kilometer).value:.1f} km")
@@ -97,29 +101,29 @@ print()
 print("═══ 3. Time units ═══\n")
 
 print("  SI prefixes:")
-ns  = 1.0 * Unit.Nanosecond
-us  = 1.0 * Unit.Microsecond
-ms  = 1.0 * Unit.Millisecond
-s   = 1.0 * Unit.Second
+ns = 1.0 * Unit.Nanosecond
+us = 1.0 * Unit.Microsecond
+ms = 1.0 * Unit.Millisecond
+s = 1.0 * Unit.Second
 print(f"    1 ns  = {ns.to(Unit.Second).value:.0e} s")
 print(f"    1 µs  = {us.to(Unit.Second).value:.0e} s")
 print(f"    1 ms  = {ms.to(Unit.Second).value} s")
 
 print("\n  Common:")
 minute = 1.0 * Unit.Minute
-hour   = 1.0 * Unit.Hour
-day    = 1.0 * Unit.Day
-week   = 1.0 * Unit.Week
+hour = 1.0 * Unit.Hour
+day = 1.0 * Unit.Day
+week = 1.0 * Unit.Week
 print(f"    1 min  = {minute.to(Unit.Second).value:.0f} s")
 print(f"    1 hour = {hour.to(Unit.Minute).value:.0f} min")
 print(f"    1 day  = {day.to(Unit.Hour).value:.0f} h")
 print(f"    1 week = {week.to(Unit.Day).value:.0f} d")
 
 print("\n  Calendar & astronomical:")
-yr     = 1.0 * Unit.Year
-jy     = 1.0 * Unit.JulianYear
-jc     = 1.0 * Unit.JulianCentury
-sday   = 1.0 * Unit.SiderealDay
+yr = 1.0 * Unit.Year
+jy = 1.0 * Unit.JulianYear
+jc = 1.0 * Unit.JulianCentury
+sday = 1.0 * Unit.SiderealDay
 print(f"    1 year             = {yr.to(Unit.Day).value:.2f} d")
 print(f"    1 Julian year      = {jy.to(Unit.Day).value:.2f} d")
 print(f"    1 Julian century   = {jc.to(Unit.Year).value:.0f} yr")
@@ -131,10 +135,8 @@ print()
 
 print("═══ 4. Angle units ═══\n")
 
-import math
-
-deg  = 180.0 * Unit.Degree
-rad  = deg.to(Unit.Radian)
+deg = 180.0 * Unit.Degree
+rad = deg.to(Unit.Radian)
 grad = deg.to(Unit.Gradian)
 turn = 1.0 * Unit.Turn
 print(f"  180° = {rad.value:.6f} rad (π = {math.pi:.6f})")
@@ -144,8 +146,8 @@ print(f"  1 turn = {turn.to(Unit.Degree).value:.0f}°")
 print("\n  Astronomical:")
 arcsec = 1.0 * Unit.Arcsecond
 arcmin = 1.0 * Unit.Arcminute
-mas    = 1.0 * Unit.MilliArcsecond
-ha     = 1.0 * Unit.HourAngle
+mas = 1.0 * Unit.MilliArcsecond
+ha = 1.0 * Unit.HourAngle
 print(f"    1 arcsec        = {arcsec.to(Unit.Degree).value:.6f}°")
 print(f"    1 arcmin        = {arcmin.to(Unit.Arcsecond).value:.0f} arcsec")
 print(f"    1 HourAngle     = {ha.to(Unit.Degree).value:.1f}°")
@@ -158,24 +160,24 @@ print()
 print("═══ 5. Mass units ═══\n")
 
 print("  SI prefixes:")
-mg  = 1.0 * Unit.Milligram
-g   = 1.0 * Unit.Gram
-kg  = 1.0 * Unit.Kilogram
-t   = 1.0 * Unit.Tonne
+mg = 1.0 * Unit.Milligram
+g = 1.0 * Unit.Gram
+kg = 1.0 * Unit.Kilogram
+t = 1.0 * Unit.Tonne
 print(f"    1 mg = {mg.to(Unit.Gram).value} g")
 print(f"    1 kg = {kg.to(Unit.Gram).value:.0f} g")
 print(f"    1 t  = {t.to(Unit.Kilogram).value:.0f} kg")
 
 print("\n  Imperial:")
-oz  = 1.0 * Unit.Ounce
-lb  = 1.0 * Unit.Pound
-st  = 1.0 * Unit.Stone
+oz = 1.0 * Unit.Ounce
+lb = 1.0 * Unit.Pound
+st = 1.0 * Unit.Stone
 print(f"    1 oz    = {oz.to(Unit.Gram).value:.4f} g")
 print(f"    1 lb    = {lb.to(Unit.Gram).value:.5f} g")
 print(f"    1 stone = {st.to(Unit.Kilogram).value:.5f} kg")
 
 print("\n  Special:")
-ct  = 1.0 * Unit.Carat
+ct = 1.0 * Unit.Carat
 amu = 1.0 * Unit.AtomicMassUnit
 m_sun = 1.0 * Unit.SolarMass
 print(f"    1 carat      = {ct.to(Unit.Gram).value} g")
@@ -188,12 +190,12 @@ print()
 
 print("═══ 6. Power units ═══\n")
 
-mW  = 1.0 * Unit.Milliwatt
-W   = 1.0 * Unit.Watt
-kW  = 1.0 * Unit.Kilowatt
-MW  = 1.0 * Unit.Megawatt
-GW  = 1.0 * Unit.Gigawatt
-hp  = 1.0 * Unit.HorsepowerMetric
+mW = 1.0 * Unit.Milliwatt
+W = 1.0 * Unit.Watt
+kW = 1.0 * Unit.Kilowatt
+MW = 1.0 * Unit.Megawatt
+GW = 1.0 * Unit.Gigawatt
+hp = 1.0 * Unit.HorsepowerMetric
 L_sun = 1.0 * Unit.SolarLuminosity
 print(f"  1 mW  = {mW.to(Unit.Watt).value} W")
 print(f"  1 kW  = {kW.to(Unit.Watt).value:.0f} W")
@@ -209,8 +211,8 @@ print()
 print("═══ 7. Derived quantities (rates) ═══\n")
 
 # Create from division
-dist  = 150.0 * Unit.Kilometer
-dur   = 2.0 * Unit.Hour
+dist = 150.0 * Unit.Kilometer
+dur = 2.0 * Unit.Hour
 speed = dist / dur
 print(f"  {dist} / {dur} = {speed} ({speed.symbol()})")
 
@@ -230,7 +232,7 @@ print(f"  DerivedUnit helpers: {mps}, {kmh}")
 
 # Scalar operations on derived
 doubled = speed * 2.0
-halved  = speed / 2.0
+halved = speed / 2.0
 negated = -speed
 print(f"  {speed} × 2   = {doubled}")
 print(f"  {speed} ÷ 2   = {halved}")
@@ -284,8 +286,6 @@ print()
 
 print("═══ 10. JSON serialization (serde) ═══\n")
 
-import json
-
 # Quantity serde
 q = 42.195 * Unit.Kilometer
 j = q.to_json()
@@ -314,8 +314,6 @@ print()
 
 print("═══ 11. Pickle support ═══\n")
 
-import pickle
-
 # Quantity
 q = 1.0 * Unit.AstronomicalUnit
 data = pickle.dumps(q)
@@ -340,18 +338,12 @@ print()
 print("═══ 12. Error handling ═══\n")
 
 errors = [
-    ("Incompatible conversion",
-     lambda: (1.0 * Unit.Meter).to(Unit.Second)),
-    ("Incompatible addition",
-     lambda: (1.0 * Unit.Meter) + (1.0 * Unit.Second)),
-    ("Division by zero (scalar)",
-     lambda: (1.0 * Unit.Meter) / 0.0),
-    ("Division by zero (quantity)",
-     lambda: (1.0 * Unit.Meter) / (0.0 * Unit.Meter)),
-    ("Invalid JSON",
-     lambda: Quantity.from_json("not json")),
-    ("String unit rejected",
-     lambda: Quantity(1.0, "meter")),  # type: ignore
+    ("Incompatible conversion", lambda: (1.0 * Unit.Meter).to(Unit.Second)),
+    ("Incompatible addition", lambda: (1.0 * Unit.Meter) + (1.0 * Unit.Second)),
+    ("Division by zero (scalar)", lambda: (1.0 * Unit.Meter) / 0.0),
+    ("Division by zero (quantity)", lambda: (1.0 * Unit.Meter) / (0.0 * Unit.Meter)),
+    ("Invalid JSON", lambda: Quantity.from_json("not json")),
+    ("String unit rejected", lambda: Quantity(1.0, "meter")),  # type: ignore
 ]
 
 for label, fn in errors:
@@ -380,7 +372,9 @@ c = 299_792_458.0 * Unit.Meter
 one_sec = 1.0 * Unit.Second
 light_speed = c / one_sec
 print(f"\n  Speed of light: {light_speed} ({light_speed.symbol()})")
-print(f"    = {light_speed.to(Unit.Kilometer, Unit.Hour)} ({DerivedUnit(Unit.Kilometer, Unit.Hour)})")
+print(
+    f"    = {light_speed.to(Unit.Kilometer, Unit.Hour)} ({DerivedUnit(Unit.Kilometer, Unit.Hour)})"
+)
 
 # Engineering: power output
 engine_power = 150.0 * Unit.HorsepowerMetric

@@ -11,11 +11,11 @@ Verifies that the package exposes at least:
 
 import math
 import pickle
+
 import pytest
 
 import qtty
 from qtty import DerivedQuantity, DerivedUnit, Quantity, Unit, UnitId
-
 
 # ── Module-level exports ─────────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ class TestModuleExports:
     def test_import_from_submodule(self):
         """Can import from qtty._qtty directly."""
         from qtty._qtty import Quantity as Q2
+
         assert Q2 is Quantity
 
 
@@ -46,38 +47,79 @@ class TestModuleExports:
 class TestUnitEnum:
     """UnitId exposes all five dimensions and common units."""
 
-    @pytest.mark.parametrize("unit", [
-        Unit.Meter, Unit.Kilometer, Unit.Millimeter, Unit.AstronomicalUnit,
-        Unit.LightYear, Unit.Parsec, Unit.Inch, Unit.Foot, Unit.Mile,
-    ])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            Unit.Meter,
+            Unit.Kilometer,
+            Unit.Millimeter,
+            Unit.AstronomicalUnit,
+            Unit.LightYear,
+            Unit.Parsec,
+            Unit.Inch,
+            Unit.Foot,
+            Unit.Mile,
+        ],
+    )
     def test_length_units_exist(self, unit):
         assert unit is not None
 
-    @pytest.mark.parametrize("unit", [
-        Unit.Second, Unit.Minute, Unit.Hour, Unit.Day, Unit.Year,
-        Unit.Millisecond, Unit.Nanosecond, Unit.JulianYear,
-    ])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            Unit.Second,
+            Unit.Minute,
+            Unit.Hour,
+            Unit.Day,
+            Unit.Year,
+            Unit.Millisecond,
+            Unit.Nanosecond,
+            Unit.JulianYear,
+        ],
+    )
     def test_time_units_exist(self, unit):
         assert unit is not None
 
-    @pytest.mark.parametrize("unit", [
-        Unit.Radian, Unit.Degree, Unit.Arcminute, Unit.Arcsecond,
-        Unit.Gradian, Unit.Turn, Unit.HourAngle,
-    ])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            Unit.Radian,
+            Unit.Degree,
+            Unit.Arcminute,
+            Unit.Arcsecond,
+            Unit.Gradian,
+            Unit.Turn,
+            Unit.HourAngle,
+        ],
+    )
     def test_angle_units_exist(self, unit):
         assert unit is not None
 
-    @pytest.mark.parametrize("unit", [
-        Unit.Gram, Unit.Kilogram, Unit.Milligram, Unit.Pound,
-        Unit.Ounce, Unit.Tonne, Unit.SolarMass,
-    ])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            Unit.Gram,
+            Unit.Kilogram,
+            Unit.Milligram,
+            Unit.Pound,
+            Unit.Ounce,
+            Unit.Tonne,
+            Unit.SolarMass,
+        ],
+    )
     def test_mass_units_exist(self, unit):
         assert unit is not None
 
-    @pytest.mark.parametrize("unit", [
-        Unit.Watt, Unit.Kilowatt, Unit.Megawatt,
-        Unit.HorsepowerMetric, Unit.SolarLuminosity,
-    ])
+    @pytest.mark.parametrize(
+        "unit",
+        [
+            Unit.Watt,
+            Unit.Kilowatt,
+            Unit.Megawatt,
+            Unit.HorsepowerMetric,
+            Unit.SolarLuminosity,
+        ],
+    )
     def test_power_units_exist(self, unit):
         assert unit is not None
 
@@ -199,7 +241,7 @@ class TestErrorHandling:
 
     def test_incompatible_comparison_raises_type_error(self):
         with pytest.raises(TypeError):
-            Quantity(1.0, Unit.Meter) < Quantity(1.0, Unit.Second)
+            _ = Quantity(1.0, Unit.Meter) < Quantity(1.0, Unit.Second)
 
     def test_division_by_zero_scalar(self):
         with pytest.raises(ZeroDivisionError):
@@ -215,11 +257,11 @@ class TestErrorHandling:
             Quantity(1.0, Unit.Meter) * Quantity(2.0, Unit.Meter)
 
     def test_floor_division_not_implemented(self):
-        with pytest.raises(Exception):  # NotImplementedError or TypeError
+        with pytest.raises((NotImplementedError, TypeError)):
             Quantity(10.0, Unit.Meter) // 2.0
 
     def test_modulo_not_implemented(self):
-        with pytest.raises(Exception):
+        with pytest.raises((NotImplementedError, TypeError)):
             Quantity(10.0, Unit.Meter) % 2.0
 
     def test_derived_conversion_dimension_mismatch(self):
@@ -435,7 +477,7 @@ class TestEndToEnd:
 
     def test_velocity_workflow(self):
         """Compute and convert a velocity."""
-        d = Quantity(42195.0, Unit.Meter)   # marathon distance
+        d = Quantity(42195.0, Unit.Meter)  # marathon distance
         t = Quantity(2.0, Unit.Hour)
         v = d / t
         assert isinstance(v, DerivedQuantity)

@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """Quick start example for qtty-py (Unit enum API)."""
 
-from qtty import DerivedQuantity, Quantity, Unit
+from qtty import Quantity, Unit
 
 print("=== qtty-py Quick Start ===\n")
 
 # 1. Creating quantities — two equivalent forms
 print("1) Creating quantities:")
-distance = 1000.0 * Unit.Meter          # arithmetic expression syntax
-time     = Quantity(9.58, Unit.Second)   # explicit constructor
+distance = 1000.0 * Unit.Meter  # arithmetic expression syntax
+time = Quantity(9.58, Unit.Second)  # explicit constructor
 print(f"   distance = {distance}")
 print(f"   time     = {time}")
-print(f"   (9.58 * Unit.Second == Quantity(9.58, Unit.Second): "
-      f"{9.58 * Unit.Second == Quantity(9.58, Unit.Second)})\n")
+print(
+    f"   (9.58 * Unit.Second == Quantity(9.58, Unit.Second): "
+    f"{9.58 * Unit.Second == Quantity(9.58, Unit.Second)})\n"
+)
 
 # 2. Converting units
 print("2) Converting units:")
@@ -37,13 +39,13 @@ print(f"   in km/h: {velocity_kmh}\n")
 
 # 5. Mixed-unit arithmetic
 print("5) Mixed-unit arithmetic:")
-meters     = 1.0 * Unit.Meter
+meters = 1.0 * Unit.Meter
 kilometers = 1.0 * Unit.Kilometer
 print(f"   {meters} + {kilometers} = {meters + kilometers}\n")
 
 # 6. Comparisons
 print("6) Comparisons:")
-small = 5.0  * Unit.Meter
+small = 5.0 * Unit.Meter
 large = 10.0 * Unit.Meter
 print(f"   {small} < {large}: {small < large}")
 print(f"   {large} > {small}: {large > small}")
