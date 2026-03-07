@@ -18,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -30,12 +32,11 @@ jobs:
           pip install maturin pytest
 
       - name: Build and install
-        working-directory: qtty-py
         run: |
-          maturin develop
+          maturin build --out dist
+          pip install --no-index --find-links dist qtty
 
       - name: Run Python tests
-        working-directory: qtty-py
         run: |
           pytest tests/ -v
 
@@ -45,6 +46,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -53,7 +56,6 @@ jobs:
           override: true
 
       - name: Run Rust tests
-        working-directory: qtty-py
         run: cargo test
 
   lint:
@@ -62,6 +64,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -71,11 +75,9 @@ jobs:
           components: rustfmt, clippy
 
       - name: Check formatting
-        working-directory: qtty-py
         run: cargo fmt -- --check
 
       - name: Run clippy
-        working-directory: qtty-py
         run: cargo clippy -- -D warnings
 
   build-wheels:
@@ -87,11 +89,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
-          working-directory: qtty-py
           command: build
           args: --release --out dist
 
@@ -99,4 +102,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
-          path: qtty-py/dist
+          path: dist

@@ -5,23 +5,33 @@
 //! qtty-py as a bridge to Python.
 //!
 //! # Example Usage
-//! 
+//!
 //! In your `Cargo.toml`:
 //! ```toml
 //! qtty-py = { path = "../qtty-py" }
-//! pyo3 = { version = "0.22", features = ["extension-module"] }
+//! pyo3 = { version = "0.28.2", features = ["extension-module"] }
+//! qtty-ffi = { path = "../qtty/qtty-ffi" }
 //! ```
 //!
 //! In your Rust code:
 //! ```ignore
 //! use pyo3::prelude::*;
-//! use my_quantities::Quantity;
-//! use qtty_py::bridge::ToQuantity;
-//! use qtty_py::PyQuantity;
+//! use qtty_ffi::UnitId;
+//! use qtty_py::bridge::{PyQuantity, ToQuantity};
 //!
 //! #[pyclass]
 //! pub struct MyObject {
-//!     distance: Quantity<Kilometer>,
+//!     distance: Distance,
+//! }
+//!
+//! pub struct Distance {
+//!     value: f64,
+//!     unit: UnitId,
+//! }
+//!
+//! impl ToQuantity for Distance {
+//!     fn value(&self) -> f64 { self.value }
+//!     fn unit(&self) -> UnitId { self.unit }
 //! }
 //!
 //! #[pymethods]
@@ -38,21 +48,23 @@ use qtty_ffi::UnitId;
 pub use crate::quantity::PyQuantity;
 
 /// Trait for types that can be converted to PyQuantity.
-/// Implement this trait on your Rust quantity types to enable easy Python bridge.
+///
+/// Implement this trait on your Rust quantity types to expose them through PyO3
+/// getters as `qtty.Quantity` instances.
 pub trait ToQuantity {
     /// Get the numeric value of this quantity
     fn value(&self) -> f64;
-    
+
     /// Get the unit of this quantity
     fn unit(&self) -> UnitId;
 
-    /// Convert this quantity to a PyQuantity for Python
+    /// Convert this quantity to a standalone `PyQuantity`.
     fn to_py_quantity(&self) -> PyQuantity {
         PyQuantity::from_quantity(self.value(), self.unit())
     }
 }
 
-/// Helper function to convert any type implementing ToQuantity into PyQuantity.
+/// Helper function to convert any type implementing [`ToQuantity`] into [`PyQuantity`].
 pub fn to_py_quantity<T: ToQuantity>(quantity: &T) -> PyQuantity {
     quantity.to_py_quantity()
 }

@@ -11,8 +11,8 @@ mod errors;
 mod quantity;
 
 use derived::{PyDerivedQuantity, PyDerivedUnit};
-use quantity::PyQuantity;
 pub use qtty_ffi::UnitId;
+use quantity::PyQuantity;
 
 /// qtty: Fast Physical Units for Python
 ///
