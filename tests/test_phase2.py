@@ -1,7 +1,9 @@
 """Derived unit, pickle, and integration tests for the Unit enum API."""
 
 import pickle
+
 import pytest
+
 from qtty import DerivedQuantity, DerivedUnit, Quantity, Unit
 
 

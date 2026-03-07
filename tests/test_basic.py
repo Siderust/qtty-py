@@ -1,6 +1,7 @@
 """Basic tests for qtty Python bindings (Unit enum API)."""
 
 import pytest
+
 from qtty import Quantity, Unit
 
 

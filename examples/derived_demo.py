@@ -2,6 +2,7 @@
 """Advanced demo for qtty-py (derived units, conversions, pickle)."""
 
 import pickle
+
 from qtty import DerivedQuantity, DerivedUnit, Quantity, Unit
 
 
