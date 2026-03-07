@@ -8,7 +8,7 @@ use qtty_ffi::{QttyDerivedQuantity, UnitId};
 /// Examples:
 /// - Velocity: Meter/Second (m/s)
 /// - Frequency: Radian/Second (rad/s)
-#[pyclass(name = "DerivedUnit", module = "qtty")]
+#[pyclass(name = "DerivedUnit", module = "qtty", from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PyDerivedUnit {
     pub numerator: UnitId,
@@ -19,7 +19,10 @@ pub struct PyDerivedUnit {
 impl PyDerivedUnit {
     #[new]
     fn new(numerator: UnitId, denominator: UnitId) -> PyResult<Self> {
-        Ok(Self { numerator, denominator })
+        Ok(Self {
+            numerator,
+            denominator,
+        })
     }
 
     /// Returns the numerator unit.
@@ -40,10 +43,7 @@ impl PyDerivedUnit {
     }
 
     fn __repr__(&self) -> String {
-        format!(
-            "DerivedUnit({:?}, {:?})",
-            self.numerator, self.denominator
-        )
+        format!("DerivedUnit({:?}, {:?})", self.numerator, self.denominator)
     }
 
     fn __str__(&self) -> String {
@@ -55,7 +55,7 @@ impl PyDerivedUnit {
 ///
 /// This represents compound quantities like velocity (m/s) or frequency (rad/s).
 /// Wraps QttyDerivedQuantity from qtty-ffi for safe, reusable operations.
-#[pyclass(name = "DerivedQuantity", module = "qtty")]
+#[pyclass(name = "DerivedQuantity", module = "qtty", from_py_object)]
 #[derive(Clone)]
 pub struct PyDerivedQuantity {
     pub value: f64,
@@ -83,7 +83,11 @@ impl PyDerivedQuantity {
 impl PyDerivedQuantity {
     #[new]
     fn new(value: f64, numerator: UnitId, denominator: UnitId) -> PyResult<Self> {
-        Ok(Self { value, numerator, denominator })
+        Ok(Self {
+            value,
+            numerator,
+            denominator,
+        })
     }
 
     /// The numeric value of the derived quantity.
@@ -160,7 +164,37 @@ impl PyDerivedQuantity {
         format!("{} {}", self.value, self.symbol())
     }
 
-    // Pickling support intentionally omitted: returning the raw `UnitId` from
-    // `qtty-ffi` keeps the Python API simple. If pickling is required, we can
-    // add a `__reduce__` that constructs the appropriate Python tuple.
+    /// Pickle support: return (class, args) for unpickling.
+    fn __reduce__(&self, py: Python<'_>) -> PyResult<(Py<PyAny>, (f64, UnitId, UnitId))> {
+        let cls = py.get_type::<Self>().into_any().unbind();
+        Ok((cls, (self.value, self.numerator, self.denominator)))
+    }
+
+    /// Serializes this derived quantity to a JSON string.
+    ///
+    /// The format is: `{"value": <float>, "numerator": <uint>, "denominator": <uint>}`
+    ///
+    /// Examples:
+    /// >>> v = DerivedQuantity(10.0, Unit.Meter, Unit.Second)
+    /// >>> v.to_json()
+    /// '{"value":10.0,"numerator":10011,"denominator":20008}'
+    fn to_json(&self) -> PyResult<String> {
+        serde_json::to_string(&self.to_ffi()).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Serialization error: {e}"))
+        })
+    }
+
+    /// Deserializes a DerivedQuantity from a JSON string.
+    ///
+    /// Accepts: `{"value": <float>, "numerator": <uint>, "denominator": <uint>}`
+    ///
+    /// Raises:
+    ///     ValueError: If the JSON is malformed or unit IDs are invalid
+    #[staticmethod]
+    fn from_json(json: &str) -> PyResult<Self> {
+        let inner: QttyDerivedQuantity = serde_json::from_str(json).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Deserialization error: {e}"))
+        })?;
+        Ok(Self::from_ffi(inner))
+    }
 }

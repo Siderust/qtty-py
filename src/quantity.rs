@@ -2,7 +2,7 @@
 //!
 //! Relies on safe `qtty-ffi` helpers instead of custom parsing logic.
 
-use pyo3::exceptions::{PyTypeError, PyZeroDivisionError};
+use pyo3::exceptions::{PyTypeError, PyValueError, PyZeroDivisionError};
 use pyo3::prelude::*;
 use qtty_ffi::{QttyQuantity, UnitId};
 
@@ -24,7 +24,7 @@ use crate::errors::map_dimension_error;
 /// >>> km = q.to(Unit.Kilometer)
 /// >>> km.value
 /// 0.1
-#[pyclass(name = "Quantity", module = "qtty")]
+#[pyclass(name = "Quantity", module = "qtty", from_py_object)]
 #[derive(Clone)]
 pub struct PyQuantity {
     inner: QttyQuantity,
@@ -72,7 +72,9 @@ impl PyQuantity {
     /// 100.0
     #[new]
     fn new(value: f64, unit: UnitId) -> PyResult<Self> {
-        Ok(Self { inner: QttyQuantity::new(value, unit) })
+        Ok(Self {
+            inner: QttyQuantity::new(value, unit),
+        })
     }
 
     /// The numeric value of the quantity.
@@ -188,7 +190,11 @@ impl PyQuantity {
     ///
     /// Raises:
     ///     ZeroDivisionError: If dividing by zero
-    fn __truediv__<'py>(&self, other: &Bound<'_, PyAny>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    fn __truediv__<'py>(
+        &self,
+        other: &Bound<'_, PyAny>,
+        py: Python<'py>,
+    ) -> PyResult<Bound<'py, PyAny>> {
         // Try to extract as f64 first (scalar division)
         if let Ok(scalar) = other.extract::<f64>() {
             if scalar == 0.0 {
@@ -227,7 +233,7 @@ impl PyQuantity {
                 return Ok(Py::new(py, derived)?.into_bound(py).into_any());
             }
         }
-        
+
         Err(PyTypeError::new_err(
             "Quantity can only be divided by a scalar or another Quantity",
         ))
@@ -336,9 +342,40 @@ impl PyQuantity {
     }
 
     /// Pickle support: return (class, args) for unpickling.
-    // Pickling support intentionally omitted: returning the raw `UnitId` from
-    // `qtty-ffi` keeps the Python API simple. If pickling is required, we can
-    // add a `__reduce__` that constructs the appropriate Python tuple.
+    fn __reduce__(&self, py: Python<'_>) -> PyResult<(Py<PyAny>, (f64, UnitId))> {
+        let cls = py.get_type::<Self>().into_any().unbind();
+        Ok((cls, (self.value(), self.inner.unit)))
+    }
+
+    /// Serializes this quantity to a JSON string.
+    ///
+    /// The format is: `{"value": <float>, "unit_id": <uint>}`
+    ///
+    /// Examples:
+    /// >>> q = Quantity(100.0, Unit.Meter)
+    /// >>> q.to_json()
+    /// '{"value":100.0,"unit_id":10011}'
+    fn to_json(&self) -> PyResult<String> {
+        serde_json::to_string(&self.inner)
+            .map_err(|e| PyValueError::new_err(format!("Serialization error: {e}")))
+    }
+
+    /// Deserializes a Quantity from a JSON string.
+    ///
+    /// Accepts: `{"value": <float>, "unit_id": <uint>}`
+    ///
+    /// Examples:
+    /// >>> Quantity.from_json('{"value":100.0,"unit_id":10011}')
+    /// Quantity(100, Meter)
+    ///
+    /// Raises:
+    ///     ValueError: If the JSON is malformed or the unit_id is invalid
+    #[staticmethod]
+    fn from_json(json: &str) -> PyResult<Self> {
+        let inner: QttyQuantity = serde_json::from_str(json)
+            .map_err(|e| PyValueError::new_err(format!("Deserialization error: {e}")))?;
+        Ok(Self { inner })
+    }
 
     /// Returns a hash of the quantity (for use in sets and dicts).
     fn __hash__(&self) -> u64 {
