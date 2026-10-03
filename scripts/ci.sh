@@ -22,8 +22,8 @@ cargo fmt --manifest-path tests/fixtures/bridge_consumer/Cargo.toml -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-targets --all-features
 
-python -m ruff format --check python tests examples
-python -m ruff check python tests examples
+python -m ruff format --check python tests examples scripts
+python -m ruff check python tests examples scripts
 
 run_pytest() {
   local tmp_dir

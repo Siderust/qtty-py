@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.4,<2.0"]
+requires = ["maturin>=1.9.4,<2.0"]
 build-backend = "maturin"
 
 [project]
@@ -35,7 +35,6 @@ Documentation = "https://docs.rs/qtty"
 [tool.maturin]
 python-source = "python"
 module-name = "qtty._qtty"
-features = ["pyo3/extension-module"]
 
 [tool.pytest.ini_options]
 addopts = ["-ra", "--strict-config", "--strict-markers"]
@@ -46,7 +45,7 @@ xfail_strict = true
 [tool.ruff]
 line-length = 100
 target-version = "py38"
-src = ["python", "tests", "examples"]
+src = ["python", "tests", "examples", "scripts"]
 extend-exclude = ["dist", "qtty", "target"]
 
 [tool.ruff.lint]

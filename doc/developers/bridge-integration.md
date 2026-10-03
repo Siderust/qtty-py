@@ -23,13 +23,13 @@ The bridge calls private bridge functions in the installed `qtty._qtty` extensio
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.29", features = ["extension-module"] }
+pyo3 = { version = "0.29" }
 qtty-py = { git = "https://github.com/Siderust/qtty-py.git" }
 ```
 
 For a checkout next to the consuming crate, replace the Git dependency with `qtty-py = { path = "../qtty-py" }`.
 
-qtty-py enables `pyo3/extension-module` from `pyproject.toml` only for maturin builds. This keeps the `rlib` consumable and lets the final downstream extension select that PyO3 feature without breaking qtty-py's Rust test binaries.
+Use maturin 1.9.4 or newer to build the extension. With PyO3 0.29, maturin sets `PYO3_BUILD_EXTENSION_MODULE` for the extension build, so downstream crates should not enable PyO3's obsolete `extension-module` Cargo feature. Keeping that setting build-scoped allows ordinary Rust binaries, tests, and benchmarks to link against Python normally.
 
 ## Copy-pastable example
 

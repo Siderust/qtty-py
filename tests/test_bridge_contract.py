@@ -6,7 +6,7 @@ import qtty
 
 consumer = pytest.importorskip(
     "qtty_bridge_consumer",
-    reason="independent bridge fixture is built by scripts/test_bridge_contract.sh and CI",
+    reason="independent bridge fixture is built by scripts/test_bridge_contract.py and CI",
 )
 
 
