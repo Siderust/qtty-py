@@ -420,6 +420,24 @@ class TestPickle:
         assert abs(m.value - 1000.0) < 1e-9
 
 
+class TestJson:
+    """The documented stable JSON representation survives the 0.8.6 upgrade."""
+
+    def test_quantity_roundtrip_uses_unit_id(self):
+        encoded = Quantity(12.5, Unit.Meter).to_json()
+        assert encoded == '{"value":12.5,"unit_id":10011}'
+        restored = Quantity.from_json(encoded)
+        assert restored == Quantity(12.5, Unit.Meter)
+
+    def test_quantity_rejects_invalid_unit_id(self):
+        with pytest.raises(ValueError, match="invalid unit_id"):
+            Quantity.from_json('{"value":1.0,"unit_id":4294967295}')
+
+    def test_quantity_rejects_new_internal_ffi_field_name(self):
+        with pytest.raises(ValueError, match="Deserialization error"):
+            Quantity.from_json('{"value":1.0,"unit":10011}')
+
+
 # ── Hash / set / dict usage ─────────────────────────────────────────────────
 
 

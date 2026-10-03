@@ -15,13 +15,15 @@ source "$VENV_DIR/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install ruff pytest pytest-cov
 python -m pip install .
+python -m pip install ./tests/fixtures/bridge_consumer
 
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test --all-targets
+cargo fmt --all -- --check
+cargo fmt --manifest-path tests/fixtures/bridge_consumer/Cargo.toml -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all-targets --all-features
 
-python -m ruff format --check python tests examples
-python -m ruff check python tests examples
+python -m ruff format --check python tests examples scripts
+python -m ruff check python tests examples scripts
 
 run_pytest() {
   local tmp_dir

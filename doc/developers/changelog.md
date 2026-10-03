@@ -1,5 +1,7 @@
 # Changelog
 
-The vendored Rust workspace changelog is maintained in [`qtty/CHANGELOG.md`](../../qtty/CHANGELOG.md).
+Upstream qtty release notes are maintained in the
+[qtty repository](https://github.com/Siderust/qtty/blob/v0.8.6/CHANGELOG.md).
 
-This project keeps that file in place because it is a conventional release artifact, but release notes should also be referenced from `doc/` when adding broader documentation.
+qtty-py release notes should be recorded in this documentation when changes
+affect the Python API or the public Rust bridge.

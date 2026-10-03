@@ -8,14 +8,15 @@ repository = "https://github.com/Siderust/qtty"
 authors = ["VPRamon <vallespuigramon@gmail.com>"]
 
 [lib]
-name = "qtty"  # Python import name
-crate-type = ["cdylib"]
+name = "qtty_py"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-qtty-ffi = { path = "qtty/qtty-ffi", features = ["pyo3"] }
-pyo3 = { version = "0.28.2", features = ["extension-module"] }
+qtty-ffi = { git = "https://github.com/Siderust/qtty.git", tag = "v0.8.6", features = ["pyo3"] }
+pyo3 = { version = "0.29" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 [dev-dependencies]
-pyo3 = { version = "0.28.2", features = ["auto-initialize"] }
+pyo3 = { version = "0.29", features = ["auto-initialize"] }
 approx = "0.5"

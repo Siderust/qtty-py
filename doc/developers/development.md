@@ -4,7 +4,7 @@
 
 - Rust toolchain with `cargo`
 - Python 3.8+
-- `maturin`
+- `maturin` 1.9.4 or newer
 - `pytest`
 
 ## Local setup
@@ -13,7 +13,7 @@
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install maturin pytest
+pip install "maturin>=1.9.4,<2" pytest
 maturin develop
 ```
 
@@ -37,9 +37,11 @@ maturin develop
 - `src/`: PyO3 bindings for `qtty-py`
 - `python/qtty/`: Python package shim
 - `tests/`: Python integration tests
+- `tests/fixtures/bridge_consumer/`: independent PyO3 contract fixture
 - `examples/`: runnable Python examples
-- `qtty/`: vendored Rust workspace
 - `doc/`: centralized project documentation
+
+The qtty 0.8.6 FFI source is resolved from its pinned Git tag; there is no local submodule.
 
 ## Documentation policy
 

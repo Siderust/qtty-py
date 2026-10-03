@@ -25,9 +25,8 @@ ENV/
 env/
 
 # Rust
-/target/
+**/target/
 **/*.rs.bk
-Cargo.lock
 
 # PyO3/maturin
 *.so

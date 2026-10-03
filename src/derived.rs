@@ -65,12 +65,12 @@ pub struct PyDerivedQuantity {
 
 impl PyDerivedQuantity {
     /// Creates a PyDerivedQuantity from a QttyDerivedQuantity.
-    fn from_ffi(inner: QttyDerivedQuantity) -> Self {
-        Self {
+    fn from_ffi(inner: QttyDerivedQuantity) -> Option<Self> {
+        Some(Self {
             value: inner.value,
-            numerator: inner.numerator,
-            denominator: inner.denominator,
-        }
+            numerator: inner.numerator_id()?,
+            denominator: inner.denominator_id()?,
+        })
     }
 
     /// Converts to a QttyDerivedQuantity for FFI operations.
@@ -110,7 +110,7 @@ impl PyDerivedQuantity {
 
     /// The unit symbol (e.g., "m/s").
     fn symbol(&self) -> String {
-        self.to_ffi().symbol()
+        format!("{}/{}", self.numerator.symbol(), self.denominator.symbol())
     }
 
     /// Converts to another derived unit with compatible dimensions.
@@ -119,7 +119,7 @@ impl PyDerivedQuantity {
     fn to(&self, numerator: UnitId, denominator: UnitId) -> PyResult<Self> {
         self.to_ffi()
             .convert_to(numerator, denominator)
-            .map(Self::from_ffi)
+            .and_then(Self::from_ffi)
             .ok_or_else(|| {
                 pyo3::exceptions::PyTypeError::new_err(format!(
                     "Cannot convert {:?}/{:?} to {:?}/{:?}: incompatible dimensions",
@@ -130,7 +130,11 @@ impl PyDerivedQuantity {
 
     /// Multiplies the derived quantity by a scalar.
     fn __mul__(&self, scalar: f64) -> Self {
-        Self::from_ffi(self.to_ffi().mul_scalar(scalar))
+        Self {
+            value: self.value * scalar,
+            numerator: self.numerator,
+            denominator: self.denominator,
+        }
     }
 
     /// Right multiplication.
@@ -145,12 +149,20 @@ impl PyDerivedQuantity {
                 "Division by zero",
             ));
         }
-        Ok(Self::from_ffi(self.to_ffi().div_scalar(scalar)))
+        Ok(Self {
+            value: self.value / scalar,
+            numerator: self.numerator,
+            denominator: self.denominator,
+        })
     }
 
     /// Negates the derived quantity.
     fn __neg__(&self) -> Self {
-        Self::from_ffi(self.to_ffi().neg())
+        Self {
+            value: -self.value,
+            numerator: self.numerator,
+            denominator: self.denominator,
+        }
     }
 
     fn __repr__(&self) -> String {
@@ -195,6 +207,10 @@ impl PyDerivedQuantity {
         let inner: QttyDerivedQuantity = serde_json::from_str(json).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("Deserialization error: {e}"))
         })?;
-        Ok(Self::from_ffi(inner))
+        Self::from_ffi(inner).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err(
+                "Deserialization error: invalid numerator or denominator unit ID",
+            )
+        })
     }
 }
