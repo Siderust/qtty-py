@@ -30,3 +30,5 @@
 - No string-based unit parsing.
 - Errors are raised as Python exceptions instead of raw status codes.
 - Pickle support is implemented at the Python object level.
+- Cross-extension bridge calls exchange only `f64` and stable `u32` unit IDs;
+  construction and extraction remain owned by the installed qtty extension.

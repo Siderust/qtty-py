@@ -1,0 +1,13 @@
+[package]
+name = "qtty-bridge-consumer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "qtty_bridge_consumer"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.29", features = ["extension-module"] }
+qtty-py = { path = "../../.." }

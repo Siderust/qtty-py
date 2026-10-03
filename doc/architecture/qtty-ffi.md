@@ -9,15 +9,15 @@
 - expose generated unit metadata
 - provide a flat representation suitable for FFI
 
-## Data source
+## Dependency source
 
-The unit catalog is driven by `qtty/qtty-ffi/units.csv`.
+qtty-py uses `qtty-ffi` from the qtty repository's immutable `v0.8.6` tag. Although `qtty` 0.8.6 is on crates.io, the separately published `qtty-ffi` line ends at 0.8.2.
 
 ## Build pipeline
 
-`qtty/qtty-ffi/build.rs`:
+Upstream `qtty-ffi/build.rs`:
 
-- parses `units.csv`
+- parses the stable discriminant catalog and qtty unit definitions
 - generates Rust source fragments for unit ids and lookup tables
 - updates `include/qtty_ffi.h` through `cbindgen`
 

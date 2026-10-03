@@ -5,9 +5,16 @@
 use pyo3::exceptions::{PyTypeError, PyValueError, PyZeroDivisionError};
 use pyo3::prelude::*;
 use qtty_ffi::{QttyQuantity, UnitId};
+use serde::{Deserialize, Serialize};
 
 use crate::derived::PyDerivedQuantity;
 use crate::errors::map_dimension_error;
+
+#[derive(Serialize, Deserialize)]
+struct QuantityJson {
+    value: f64,
+    unit_id: u32,
+}
 
 /// A physical quantity with a value and unit.
 ///
@@ -50,7 +57,9 @@ impl PyQuantity {
 
     /// Get the unit (public API for bridge usage).
     pub fn get_unit(&self) -> UnitId {
-        self.inner.unit
+        self.inner
+            .unit_id()
+            .expect("PyQuantity always contains a validated UnitId")
     }
 }
 
@@ -86,7 +95,7 @@ impl PyQuantity {
     /// The unit of the quantity.
     #[getter]
     fn unit(&self) -> UnitId {
-        self.inner.unit
+        self.get_unit()
     }
 
     /// Converts this quantity to another unit of the same dimension.
@@ -110,7 +119,7 @@ impl PyQuantity {
         self.inner
             .convert_to(unit)
             .map(|inner| Self { inner })
-            .ok_or_else(|| map_dimension_error(self.inner.unit, unit))
+            .ok_or_else(|| map_dimension_error(self.get_unit(), unit))
     }
 
     /// Returns the absolute value of the quantity.
@@ -122,7 +131,7 @@ impl PyQuantity {
     /// 10.0
     fn __abs__(&self) -> Self {
         Self {
-            inner: QttyQuantity::new(self.value().abs(), self.inner.unit),
+            inner: QttyQuantity::new(self.value().abs(), self.get_unit()),
         }
     }
 
@@ -136,7 +145,7 @@ impl PyQuantity {
         self.inner
             .add(&other.inner)
             .map(|inner| Self { inner })
-            .ok_or_else(|| map_dimension_error(self.inner.unit, other.inner.unit))
+            .ok_or_else(|| map_dimension_error(self.get_unit(), other.get_unit()))
     }
 
     /// Subtracts two quantities with compatible dimensions.
@@ -149,7 +158,7 @@ impl PyQuantity {
         self.inner
             .sub(&other.inner)
             .map(|inner| Self { inner })
-            .ok_or_else(|| map_dimension_error(self.inner.unit, other.inner.unit))
+            .ok_or_else(|| map_dimension_error(self.get_unit(), other.get_unit()))
     }
 
     /// Multiplies the quantity by a scalar.
@@ -217,7 +226,7 @@ impl PyQuantity {
                 }
                 let ratio = self.value() / q_converted.value();
                 let result = Self {
-                    inner: QttyQuantity::new(ratio, self.inner.unit),
+                    inner: QttyQuantity::new(ratio, self.get_unit()),
                 };
                 return Ok(Py::new(py, result)?.into_bound(py).into_any());
             } else {
@@ -227,8 +236,8 @@ impl PyQuantity {
                 }
                 let derived = PyDerivedQuantity {
                     value: self.value() / q.value(),
-                    numerator: self.inner.unit,
-                    denominator: q.inner.unit,
+                    numerator: self.get_unit(),
+                    denominator: q.get_unit(),
                 };
                 return Ok(Py::new(py, derived)?.into_bound(py).into_any());
             }
@@ -294,7 +303,7 @@ impl PyQuantity {
     ///     TypeError: If the dimensions are incompatible
     fn __lt__(&self, other: &PyQuantity) -> PyResult<bool> {
         if !self.inner.compatible(&other.inner) {
-            return Err(map_dimension_error(self.inner.unit, other.inner.unit));
+            return Err(map_dimension_error(self.get_unit(), other.get_unit()));
         }
 
         let other_converted = other.to(self.unit())?;
@@ -304,7 +313,7 @@ impl PyQuantity {
     /// Less than or equal comparison.
     fn __le__(&self, other: &PyQuantity) -> PyResult<bool> {
         if !self.inner.compatible(&other.inner) {
-            return Err(map_dimension_error(self.inner.unit, other.inner.unit));
+            return Err(map_dimension_error(self.get_unit(), other.get_unit()));
         }
 
         let other_converted = other.to(self.unit())?;
@@ -314,7 +323,7 @@ impl PyQuantity {
     /// Greater than comparison.
     fn __gt__(&self, other: &PyQuantity) -> PyResult<bool> {
         if !self.inner.compatible(&other.inner) {
-            return Err(map_dimension_error(self.inner.unit, other.inner.unit));
+            return Err(map_dimension_error(self.get_unit(), other.get_unit()));
         }
 
         let other_converted = other.to(self.unit())?;
@@ -324,7 +333,7 @@ impl PyQuantity {
     /// Greater than or equal comparison.
     fn __ge__(&self, other: &PyQuantity) -> PyResult<bool> {
         if !self.inner.compatible(&other.inner) {
-            return Err(map_dimension_error(self.inner.unit, other.inner.unit));
+            return Err(map_dimension_error(self.get_unit(), other.get_unit()));
         }
 
         let other_converted = other.to(self.unit())?;
@@ -338,13 +347,13 @@ impl PyQuantity {
 
     /// Returns a human-readable string representation.
     fn __str__(&self) -> String {
-        format!("{} {}", self.value(), self.inner.unit.name())
+        format!("{} {}", self.value(), self.get_unit().name())
     }
 
     /// Pickle support: return (class, args) for unpickling.
     fn __reduce__(&self, py: Python<'_>) -> PyResult<(Py<PyAny>, (f64, UnitId))> {
         let cls = py.get_type::<Self>().into_any().unbind();
-        Ok((cls, (self.value(), self.inner.unit)))
+        Ok((cls, (self.value(), self.get_unit())))
     }
 
     /// Serializes this quantity to a JSON string.
@@ -356,8 +365,11 @@ impl PyQuantity {
     /// >>> q.to_json()
     /// '{"value":100.0,"unit_id":10011}'
     fn to_json(&self) -> PyResult<String> {
-        serde_json::to_string(&self.inner)
-            .map_err(|e| PyValueError::new_err(format!("Serialization error: {e}")))
+        serde_json::to_string(&QuantityJson {
+            value: self.value(),
+            unit_id: self.get_unit() as u32,
+        })
+        .map_err(|e| PyValueError::new_err(format!("Serialization error: {e}")))
     }
 
     /// Deserializes a Quantity from a JSON string.
@@ -372,9 +384,15 @@ impl PyQuantity {
     ///     ValueError: If the JSON is malformed or the unit_id is invalid
     #[staticmethod]
     fn from_json(json: &str) -> PyResult<Self> {
-        let inner: QttyQuantity = serde_json::from_str(json)
+        let serialized: QuantityJson = serde_json::from_str(json)
             .map_err(|e| PyValueError::new_err(format!("Deserialization error: {e}")))?;
-        Ok(Self { inner })
+        let unit = UnitId::from_u32(serialized.unit_id).ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "Deserialization error: invalid unit_id {}",
+                serialized.unit_id
+            ))
+        })?;
+        Ok(Self::from_quantity(serialized.value, unit))
     }
 
     /// Returns a hash of the quantity (for use in sets and dicts).
@@ -385,7 +403,7 @@ impl PyQuantity {
 
         let mut hasher = DefaultHasher::new();
         self.value().to_bits().hash(&mut hasher);
-        (self.inner.unit as u32).hash(&mut hasher);
+        self.inner.unit.hash(&mut hasher);
         hasher.finish()
     }
 }

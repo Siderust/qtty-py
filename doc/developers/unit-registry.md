@@ -1,24 +1,22 @@
 # Unit Registry
 
-The FFI unit catalog is defined in [`qtty/qtty-ffi/units.csv`](../../qtty/qtty-ffi/units.csv).
+The FFI unit catalog belongs to the upstream qtty 0.8.6 source. qtty-py consumes it through `qtty-ffi`; it does not keep a local duplicate.
 
 ## Csv schema
 
 ```text
-discriminant,dimension,name,symbol,ratio
+discriminant,ffi_name
 ```
 
 ## Rules
 
 - `discriminant` is ABI-stable and must never change after release.
-- `dimension` must match a known `DimensionId`.
-- `name` becomes the Rust and generated ABI identifier.
-- `symbol` is the display symbol.
-- `ratio` is the scale relative to the canonical unit for the dimension.
+- `ffi_name` maps the stable value to the upstream qtty unit type.
+- Dimensions, symbols, and conversion ratios come from qtty's unit definitions.
 
 ## Build impact
 
-Changes to `units.csv` regenerate:
+Upstream catalog changes regenerate:
 
 - the `UnitId` enum
 - unit lookup tables
