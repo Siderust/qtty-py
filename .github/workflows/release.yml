@@ -45,8 +45,8 @@ jobs:
           python_version = pyproject["project"]["version"]
           cargo_version = cargo["package"]["version"]
 
-          if python_name != "qtty":
-              raise SystemExit(f"expected PyPI project name 'qtty', got {python_name!r}")
+          if python_name != "qtty-py":
+              raise SystemExit(f"expected PyPI project name 'qtty-py', got {python_name!r}")
           if python_version != cargo_version:
               raise SystemExit(
                   f"version mismatch: pyproject.toml={python_version}, Cargo.toml={cargo_version}"
