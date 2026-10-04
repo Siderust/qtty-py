@@ -26,7 +26,7 @@ The Crates.io and docs.rs badges above refer to the underlying `qtty` Rust crate
 ## Installation
 
 ```bash
-pip install qtty
+pip install qtty-py
 ```
 
 ## Quick Start
