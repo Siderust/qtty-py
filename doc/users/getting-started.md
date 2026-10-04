@@ -9,7 +9,7 @@
 ## Install
 
 ```bash
-pip install qtty
+pip install qtty-py
 ```
 
 ## Basic usage
