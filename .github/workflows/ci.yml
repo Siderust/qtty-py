@@ -137,7 +137,7 @@ jobs:
             -i python3.14
 
       - name: Install built wheel
-        run: python -m pip install --force-reinstall dist/qtty-*.whl
+        run: python -m pip install --force-reinstall dist/*.whl
 
       - name: Test installed wheel
         run: |
