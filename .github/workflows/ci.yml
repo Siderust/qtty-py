@@ -108,8 +108,8 @@ jobs:
           cd "$tmpdir"
           python -m pytest --rootdir "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/tests"
 
-  release-package:
-    name: Release Package
+  distribution-package:
+    name: Distribution Package Validation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -150,7 +150,7 @@ jobs:
         with:
           command: sdist
           maturin-version: ${{ env.MATURIN_VERSION }}
-          args: --locked --out dist
+          args: --out dist
 
       - uses: actions/upload-artifact@v4
         with:
