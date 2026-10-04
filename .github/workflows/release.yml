@@ -22,9 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Verify tag and package versions
         shell: python
@@ -90,6 +90,8 @@ jobs:
             -i python3.10
             -i python3.11
             -i python3.12
+            -i python3.13
+            -i python3.14
 
       - uses: actions/upload-artifact@v4
         with:
@@ -112,25 +114,20 @@ jobs:
               3.10
               3.11
               3.12
-            interpreters: >-
-              -i python3.8
-              -i python3.9
-              -i python3.10
-              -i python3.11
-              -i python3.12
+              3.13
+              3.14
           - runner: macos-15
             arch: aarch64
             python_versions: |
               3.11
               3.12
-            interpreters: >-
-              -i python3.11
-              -i python3.12
+              3.13
+              3.14
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python_versions }}
 
@@ -144,7 +141,7 @@ jobs:
             --locked
             --compatibility pypi
             --out dist
-            ${{ matrix.interpreters }}
+            --find-interpreter
 
       - uses: actions/upload-artifact@v4
         with:
@@ -159,7 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: |
             3.8
@@ -167,6 +164,8 @@ jobs:
             3.10
             3.11
             3.12
+            3.13
+            3.14
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1.51.0
@@ -178,11 +177,7 @@ jobs:
             --locked
             --compatibility pypi
             --out dist
-            -i python3.8
-            -i python3.9
-            -i python3.10
-            -i python3.11
-            -i python3.12
+            --find-interpreter
 
       - uses: actions/upload-artifact@v4
         with:
