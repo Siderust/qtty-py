@@ -16,6 +16,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   PACKAGE_NAME: qtty
+  MATURIN_VERSION: v1.15.0
 
 jobs:
   fmt:
@@ -28,9 +29,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
       - name: Install formatter
         run: python -m pip install --upgrade pip ruff
@@ -52,9 +53,9 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
       - name: Install linters
         run: python -m pip install --upgrade pip ruff
@@ -72,9 +73,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Run Rust tests
         run: cargo test --all-targets --all-features
 
@@ -84,7 +85,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-minor: ["8", "9", "10", "11", "12"]
+        python-minor: ["8", "9", "10", "11", "12", "13", "14"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,7 +93,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Set up Python 3.${{ matrix.python-minor }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.${{ matrix.python-minor }}"
           cache: pip
@@ -107,6 +108,59 @@ jobs:
           cd "$tmpdir"
           python -m pytest --rootdir "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/tests"
 
+  distribution-package:
+    name: Distribution Package Validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install wheel test dependencies
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Build PyPI-compatible wheel
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: build
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          manylinux: "2_28"
+          args: >-
+            --release
+            --locked
+            --compatibility pypi
+            --out dist
+            -i python3.14
+
+      - name: Install built wheel
+        run: python -m pip install --force-reinstall dist/qtty-*.whl
+
+      - name: Test installed wheel
+        run: |
+          tmpdir="$(mktemp -d)"
+          cd "$tmpdir"
+          python -m pytest --rootdir "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/tests"
+
+      - name: Build source distribution
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: sdist
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          args: --out dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qtty-release-package
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
   coverage:
     name: Coverage
     if: ${{ github.event_name == 'push' || github.event.pull_request.draft == false }}
@@ -117,9 +171,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
       - name: Install coverage dependencies
         run: |
@@ -163,9 +217,9 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
       - name: Build both extensions and run the bridge contract
         run: python scripts/test_bridge_contract.py

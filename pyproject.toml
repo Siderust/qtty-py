@@ -22,6 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Scientific/Engineering :: Physics",
@@ -29,8 +31,8 @@ classifiers = [
 keywords = ["units", "quantities", "physics", "astronomy", "rust"]
 
 [project.urls]
-Repository = "https://github.com/Siderust/qtty"
-Documentation = "https://docs.rs/qtty"
+Repository = "https://github.com/Siderust/qtty-py"
+Documentation = "https://github.com/Siderust/qtty-py/tree/main/doc"
 
 [tool.maturin]
 python-source = "python"

@@ -1,0 +1,231 @@
+name: Release to PyPI
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MATURIN_VERSION: v1.15.0
+
+jobs:
+  validate:
+    name: Validate release metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Verify tag and package versions
+        shell: python
+        run: |
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+              raise SystemExit(f"release tag must be vMAJOR.MINOR.PATCH, got {tag!r}")
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text())
+          cargo = tomllib.loads(Path("Cargo.toml").read_text())
+
+          python_name = pyproject["project"]["name"]
+          python_version = pyproject["project"]["version"]
+          cargo_version = cargo["package"]["version"]
+
+          if python_name != "qtty":
+              raise SystemExit(f"expected PyPI project name 'qtty', got {python_name!r}")
+          if python_version != cargo_version:
+              raise SystemExit(
+                  f"version mismatch: pyproject.toml={python_version}, Cargo.toml={cargo_version}"
+              )
+          if tag != f"v{python_version}":
+              raise SystemExit(
+                  f"tag {tag!r} does not match package version v{python_version}"
+              )
+
+  linux-wheels:
+    name: Linux wheels (${{ matrix.arch }})
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: build
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          target: ${{ matrix.target }}
+          manylinux: "2_28"
+          args: >-
+            --release
+            --locked
+            --compatibility pypi
+            --out dist
+            -i python3.8
+            -i python3.9
+            -i python3.10
+            -i python3.11
+            -i python3.12
+            -i python3.13
+            -i python3.14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.arch }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  macos-wheels:
+    name: macOS wheels (${{ matrix.arch }})
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: x86_64
+            python_versions: |
+              3.8
+              3.9
+              3.10
+              3.11
+              3.12
+              3.13
+              3.14
+          - runner: macos-15
+            arch: aarch64
+            python_versions: |
+              3.11
+              3.12
+              3.13
+              3.14
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python_versions }}
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: build
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          args: >-
+            --release
+            --locked
+            --compatibility pypi
+            --out dist
+            --find-interpreter
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.arch }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  windows-wheels:
+    name: Windows wheels (x86_64)
+    needs: validate
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
+            3.12
+            3.13
+            3.14
+
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: build
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          args: >-
+            --release
+            --locked
+            --compatibility pypi
+            --out dist
+            --find-interpreter
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-x86_64
+          path: dist/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1.51.0
+        with:
+          command: sdist
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          args: --out dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs:
+      - linux-wheels
+      - macos-wheels
+      - windows-wheels
+      - sdist
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Show release artifacts
+        run: ls -lah dist
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@v1.14.2
