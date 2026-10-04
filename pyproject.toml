@@ -29,8 +29,8 @@ classifiers = [
 keywords = ["units", "quantities", "physics", "astronomy", "rust"]
 
 [project.urls]
-Repository = "https://github.com/Siderust/qtty"
-Documentation = "https://docs.rs/qtty"
+Repository = "https://github.com/Siderust/qtty-py"
+Documentation = "https://github.com/Siderust/qtty-py/tree/main/doc"
 
 [tool.maturin]
 python-source = "python"
