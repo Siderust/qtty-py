@@ -11,6 +11,7 @@ Verifies that the package exposes at least:
 
 import math
 import pickle
+from importlib.metadata import version
 
 import pytest
 
@@ -29,7 +30,7 @@ class TestModuleExports:
 
     def test_version_is_string(self):
         assert isinstance(qtty.__version__, str)
-        assert qtty.__version__ == "0.1.0"
+        assert qtty.__version__ == version("qtty-py")
 
     def test_unit_is_alias_for_unitid(self):
         assert Unit is UnitId
