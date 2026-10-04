@@ -197,7 +197,7 @@ jobs:
         with:
           command: sdist
           maturin-version: ${{ env.MATURIN_VERSION }}
-          args: --locked --out dist
+          args: --out dist
 
       - uses: actions/upload-artifact@v4
         with:
